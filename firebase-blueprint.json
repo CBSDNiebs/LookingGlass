@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "Observation": {
+      "title": "Observation",
+      "description": "A recorded observation of an educator.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID of the observer" },
+        "educatorName": { "type": "string" },
+        "school": { "type": "string", "enum": ["Sunset Intermediate School", "Millicoma Intermediate School", "Madison Elementary School", "Little Pirates Pre-School", "Eastside Elementary School"] },
+        "mode": { "type": "string", "enum": ["OTRs", "Praise", "Engagement"] },
+        "lessonTargetPosted": { "type": "string", "enum": ["Yes", "No"] },
+        "curriculaMaterialsUsed": { "type": "string", "enum": ["Yes", "No"] },
+        "durationMs": { "type": "number" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "stoppedAt": { "type": "string", "format": "date-time" },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tMs": { "type": "number" },
+              "kind": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string", "description": "Optional notes added by the observer after the observation is completed." }
+      },
+      "required": ["uid", "educatorName", "school", "mode", "lessonTargetPosted", "curriculaMaterialsUsed", "durationMs", "startedAt", "stoppedAt", "events", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/observations/{observationId}": {
+      "schema": { "$ref": "#/entities/Observation" },
+      "description": "Stores recorded observations."
+    }
+  }
+}

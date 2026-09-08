@@ -1,0 +1,2138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Walk Through Tool</title>
+  <style>
+    :root{
+      --bg:#f7f7f5; --card:#fff; --ink:#111; --muted:#555;
+      --hairline:rgba(0,0,0,.12);
+      --accent:#111; /* primary buttons black */
+      --stop:#c81d25;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      --lite:#e0e0e0;
+      /* Updated OTR colors */
+      --otr-warm:#0b2a6f;       /* dark blue */
+      --otr-cold:#1a4fff;       /* blue */
+      --otr-volunteer:#9fb8ff;  /* muted light blue */
+      --otr-group:#a855f7;      /* light purple */
+      --otr-total:rgba(0,0,0,0.2); /* transparent grey */
+      --praise-specific: #1f9d55; /* Green */
+      --praise-general: #86efac; /* Light Green */
+      --praise-corrective: #3b82f6; /* Blue */
+      --praise-redirect: #f97316; /* Orange */
+      --praise-gen-crit: #ef4444; /* Red */
+      --praise-ind-crit: #b91c1c; /* Dark Red */
+      --eng-whole: #0369a1;
+      --eng-small: #0284c7;
+      --eng-partners: #38bdf8;
+      --eng-choral: #d97706;
+      --eng-cloze: #f59e0b;
+      --eng-whiteboard: #fbbf24;
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:var(--bg);
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .app{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      padding:12px;
+    }
+    .card{
+      margin:0 auto;
+      width:100%;
+      max-width:520px;
+      background:var(--card);
+      border:1px solid var(--hairline);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .header h1{
+      font-size:24px;
+      line-height:1.15;
+      margin:0 0 6px;
+      letter-spacing:.2px;
+    }
+    .subhead{margin:0;color:var(--muted);font-size:14px;line-height:1.3;}
+    .form{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      align-items:end;
+    }
+    .field{display:flex;flex-direction:column;gap:6px;}
+    .label{font-size:12px;color:var(--muted);letter-spacing:.2px;}
+    .control{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--hairline);
+      background:#fff;
+      color:var(--ink);
+      font-size:16px;
+      line-height:1.2;
+    }
+    .control:disabled{opacity:.55;}
+    .btn{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--hairline);
+      background:#fff;
+      color:var(--ink);
+      cursor:pointer;
+      font-weight:700;
+      letter-spacing:.2px;
+      font-size:16px;
+      line-height:1.1;
+      min-height:52px;
+      padding:14px 14px;
+      touch-action:manipulation;
+    }
+    .btn:disabled{opacity:.45;cursor:not-allowed;}
+    .btn.primary{
+      background:var(--accent);
+      border-color:rgba(0,0,0,.20);
+      color:#fff;
+    }
+    .btn.start{background:#1f9d55;color:#fff;border-color:rgba(0,0,0,.08);}
+    .btn.stop{background:var(--stop);border-color:rgba(0,0,0,.10);color:#fff;}
+    .btn.restart,
+    .btn.reset{
+      background:var(--lite);
+      color:#111;
+      font-size:14px;
+      min-height:44px;
+      padding:10px 12px;
+      border-radius:12px;
+    }
+    /* Updated OTR buttons: distinct blues */
+    .btn.otr{
+      color:#fff;
+      border-color:rgba(0,0,0,.20);
+      min-height:56px;
+      border-radius:14px;
+      padding:14px 10px;
+      font-size:14px;
+      letter-spacing:.1px;
+    }
+    .btn.otr:disabled{opacity:.45;cursor:not-allowed;}
+    .btn.otr.warm{background:var(--otr-warm);}
+    .btn.otr.cold{background:var(--otr-cold);}
+    .btn.otr.group{background:var(--otr-group);}
+    .btn.otr.volunteer{
+      background:var(--otr-volunteer);
+      color:#0b1a3a;
+      border-color:rgba(0,0,0,.12);
+    }
+    .btn.otr.volunteer:disabled{color:rgba(11,26,58,.65);}
+    .btn.otr.specific{background:var(--praise-specific); color:#fff;}
+    .btn.otr.general{background:var(--praise-general); color:#064e3b;}
+    .btn.otr.corrective{background:var(--praise-corrective); color:#fff;}
+    .btn.otr.redirect{background:var(--praise-redirect); color:#fff;}
+    .btn.otr.gen-crit{background:var(--praise-gen-crit); color:#fff;}
+    .btn.otr.ind-crit{background:var(--praise-ind-crit); color:#fff;}
+    .btn.otr.eng-whole{background:var(--eng-whole); color:#fff;}
+    .btn.otr.eng-small{background:var(--eng-small); color:#fff;}
+    .btn.otr.eng-partners{background:var(--eng-partners); color:#082f49;}
+    .btn.otr.eng-choral{background:var(--eng-choral); color:#fff;}
+    .btn.otr.eng-cloze{background:var(--eng-cloze); color:#fff;}
+    .btn.otr.eng-whiteboard{background:var(--eng-whiteboard); color:#451a03;}
+    .btn.yn {
+      border-width: 2px;
+      background: #fff;
+    }
+    .btn.yn.yes {
+      border-color: #1f9d55;
+      color: #1f9d55;
+    }
+    .btn.yn.yes.selected {
+      background: #1f9d55;
+      color: #fff;
+    }
+    .btn.yn.no {
+      border-color: var(--stop);
+      color: var(--stop);
+    }
+    .btn.yn.no.selected {
+      background: var(--stop);
+      color: #fff;
+    }
+    .stats{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    .stat{
+      border:1px solid var(--hairline);
+      border-radius:14px;
+      padding:14px;
+      background:linear-gradient(#fff,#fbfbfb);
+    }
+    .kicker{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .value{font-family:var(--mono);font-size:22px;letter-spacing:.2px;}
+    .runControls{
+      margin-top:14px;
+      display:grid;
+      gap:36px;
+    }
+    .otrRow{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      align-items:stretch;
+    }
+    .bottomRow{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+    }
+    .bottomRow > .btn {
+      flex: 1;
+    }
+    #startBtn{min-height:52px;border-radius:14px;font-size:16px;}
+    #resetBtn{
+      flex: 0 0 48px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+      color: #fff;
+    }
+    #undoBtn{
+      background-color: #6b7280;
+      color: #fff;
+    }
+    #stopBtn{min-height:48px;}
+    .notes-input {
+      width: 100%;
+      min-height: 80px;
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 14px;
+      resize: vertical;
+      background: var(--bg);
+      box-sizing: border-box;
+    }
+    .notes-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .fineprint{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:12px;
+      border-top:1px solid var(--hairline);
+      padding-top:12px;
+      line-height:1.35;
+    }
+    .results-grid{
+      margin-top:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .mode-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 768px) {
+      .mode-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    .summary{
+      border:1px solid var(--hairline);
+      border-radius:14px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .summary .row{
+      display:flex;justify-content:space-between;gap:12px;
+      padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.10);
+    }
+    .summary .row:last-child{border-bottom:0;}
+    .summary .k{color:var(--muted);font-size:12px;}
+    .summary .v{font-family:var(--mono);font-size:12px;text-align:right;}
+    .chartWrap{
+      border:1px solid var(--hairline);
+      border-radius:14px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .chartTitle{font-size:12px;color:var(--muted);margin-bottom:10px;}
+    .chartHost{width:100%;overflow:hidden;}
+    .chartHost svg{width:100%;height:auto;display:block;}
+    .actions{margin-top:16px;display:grid;grid-template-columns:1fr;gap:12px;}
+    #shareStatus{margin-top:0;border-top:0;padding-top:0;}
+    .mode-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      min-height: auto;
+      box-shadow: var(--shadow);
+      transition: opacity 0.2s;
+    }
+    .mode-btn:hover {
+      opacity: 0.9;
+    }
+    #shareBtn, #restartBtn {
+      min-height: 64px;
+      padding: 16px 24px;
+      font-size: 18px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #shareBtn {
+      background: #1f9d55;
+      color: #fff;
+      border-color: rgba(0,0,0,.08);
+      transition: background-color 0.2s, color 0.2s;
+    }
+    #shareBtn.copied {
+      background: #86efac;
+      color: #064e3b;
+    }
+    @media (min-width:860px){
+      body{background:radial-gradient(1200px 600px at 20% 0%, #fff 0%, var(--bg) 65%);}
+      .app{align-items:center;padding:24px;}
+      .card{max-width:920px;padding:22px;border-radius:var(--radius);}
+      .header h1{font-size:28px;}
+      .form{grid-template-columns:1fr 1fr auto;gap:14px;}
+      .btn{width:auto;min-height:auto;font-size:14px;border-radius:999px;padding:11px 14px;}
+      .control{font-size:14px;}
+      .stats{grid-template-columns:1fr 1fr;}
+      .runControls .btn{width:100%; border-radius:14px;}
+      .otrRow{gap:14px;}
+      .bottomRow{gap:14px;}
+      #shareBtn, #restartBtn {
+        min-height: 56px;
+        padding: 16px 32px;
+        font-size: 16px;
+        border-radius: 999px;
+      }
+      .results-grid{grid-template-columns:1fr 2fr;gap:18px;}
+      .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+      .actions .btn{flex: 1;}
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app" aria-live="polite"></div>
+
+  <template id="screen-setup">
+    <main class="card">
+      <header class="header">
+        <h1 id="setupTitle">Walk Through Tool</h1>
+      </header>
+      <section class="form">
+        <label class="field">
+          <span class="label">Observed Educator Name</span>
+          <input type="text" id="educatorInput" class="control" placeholder="Enter name " />
+        </label>
+        <button id="beginBtn" class="btn primary" disabled>Continue</button>
+      </section>
+      <footer class="fineprint">
+        <span>Data stays in your browser until you share or restart.</span>
+      </footer>
+    </main>
+  </template>
+
+  <template id="screen-questions">
+    <main class="card">
+      <header class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1>Observation Details</h1>
+          <p class="subhead">Please answer the following questions.</p>
+        </div>
+        <button id="questionsBackBtn" class="btn primary" style="min-height: auto; padding: 8px 16px; font-size: 14px; width: auto; border-radius: 999px; background-color: #6b7280; color: #fff; border: none;" type="button">Back</button>
+      </header>
+
+      <section class="form" style="margin-top: 24px; display: flex; flex-direction: column; gap: 24px; align-items: stretch;">
+        <div class="question-group">
+          <div class="label" style="font-size: 16px; color: var(--ink); margin-bottom: 8px; font-weight: 500;">Are the agreed upon teaching materials being used?</div>
+          <div style="display: flex; gap: 12px;">
+            <button id="q2YesBtn" class="btn yn yes" type="button">Yes</button>
+            <button id="q2NoBtn" class="btn yn no" type="button">No</button>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="label" style="font-size: 16px; color: var(--ink); margin-bottom: 8px; font-weight: 500;">Was the lesson target referenced visually and/or verbally?</div>
+          <div style="display: flex; gap: 12px;">
+            <button id="q1YesBtn" class="btn yn yes" type="button">Yes</button>
+            <button id="q1NoBtn" class="btn yn no" type="button">No</button>
+          </div>
+        </div>
+
+        <section class="actions" style="margin-top: 32px; display:flex; flex-direction: row; gap:12px;">
+          <button id="questionsNextBtn" class="btn primary" type="button" disabled style="flex: 1;">Next</button>
+        </section>
+      </section>
+    </main>
+  </template>
+
+  <template id="screen-mode-select">
+    <main class="card">
+      <header class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1>Select Timer</h1>
+          <p class="subhead">Choose the type of observation to record.</p>
+        </div>
+        <button id="modeSelectBackBtn" class="btn primary" style="min-height: auto; padding: 8px 16px; font-size: 14px; width: auto; border-radius: 999px; background-color: #6b7280; color: #fff; border: none;" type="button">Back</button>
+      </header>
+
+      <section style="display: flex; justify-content: space-around; margin-top: 32px; margin-bottom: 32px; gap: 16px; flex-wrap: wrap;">
+        <button id="modeOtrBtn" class="mode-btn" type="button">OTRs</button>
+        <button id="modePraiseBtn" class="mode-btn" type="button">Praise</button>
+        <button id="modeEngagementBtn" class="mode-btn" type="button">Engagement</button>
+        <button id="modeAllBtn" class="mode-btn" type="button">All</button>
+      </section>
+    </main>
+  </template>
+
+  <template id="screen-run">
+    <main class="card">
+      <header class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 id="runTitle">Recording</h1>
+          <p class="subhead"><span id="runContext"></span></p>
+        </div>
+        <button id="runBackBtn" class="btn primary" style="min-height: auto; padding: 8px 16px; font-size: 14px; width: auto; border-radius: 999px; background-color: #6b7280; color: #fff; border: none;" type="button">Back</button>
+      </header>
+      <section class="stats">
+        <div class="stat">
+          <div class="kicker">Elapsed</div>
+          <div class="value" id="elapsedText">00:00.0</div>
+        </div>
+        <div class="stat">
+          <div class="kicker" id="totalKicker">Total OTR</div>
+          <div class="value" id="otrTotalText">0</div>
+        </div>
+      </section>
+      <button id="startBtn" class="btn start" type="button" style="margin-top:16px; width: 100%;">Start</button>
+      
+      <div id="timerNotesContainer" style="margin-top:16px;">
+        <span class="label" style="font-weight:bold;">Notes</span>
+        <textarea id="timerNotes" class="notes-input" style="margin-top:8px; min-height: 60px;" placeholder="Type notes here..." aria-label="Observation notes"></textarea>
+      </div>
+
+      <section class="runControls" role="group" aria-label="Recording controls">
+        <div id="otrSectionLabel" class="label" style="display:none; font-size:14px; font-weight:bold; margin-bottom:-24px; color:var(--ink);">OTRs</div>
+        <div id="otrButtons1" class="otrRow" style="grid-template-columns: 1fr;" aria-label="Target buttons">
+          <button id="otrGroupBtn" class="btn otr group" type="button" disabled>Whole Group</button>
+        </div>
+        <div id="otrButtons2" class="otrRow" aria-label="Opportunities to respond buttons">
+          <button id="otrWarmBtn" class="btn otr warm" type="button" disabled>Warm Call</button>
+          <button id="otrColdBtn" class="btn otr cold" type="button" disabled>Cold Call</button>
+          <button id="otrVolunteerBtn" class="btn otr volunteer" type="button" disabled>Volunteer</button>
+        </div>
+
+        <div id="praiseSectionLabel" class="label" style="display:none; font-size:14px; font-weight:bold; margin-bottom:-24px; margin-top:12px; color:var(--ink);">Praise</div>
+        <div id="praiseButtons" class="otrRow" style="display: none; grid-template-columns: 1fr 1fr;" aria-label="Praise buttons">
+          <button id="praiseSpecificBtn" class="btn otr specific" type="button" disabled>Specific Praise</button>
+          <button id="praiseGeneralBtn" class="btn otr general" type="button" disabled>General Praise</button>
+          <button id="praiseCorrectiveBtn" class="btn otr corrective" type="button" disabled>Corrective Feedback</button>
+          <button id="praiseRedirectBtn" class="btn otr redirect" type="button" disabled>Redirective Statements</button>
+          <button id="praiseGenCritBtn" class="btn otr gen-crit" type="button" disabled>General Criticism</button>
+          <button id="praiseIndCritBtn" class="btn otr ind-crit" type="button" disabled>Individual Criticism</button>
+        </div>
+
+        <div id="engSectionLabel" class="label" style="display:none; font-size:14px; font-weight:bold; margin-bottom:-24px; margin-top:12px; color:var(--ink);">Engagement</div>
+        <div id="engButtons1" class="otrRow" style="display: none; grid-template-columns: 1fr 1fr 1fr;" aria-label="Engagement buttons 1">
+          <button id="engWholeBtn" class="btn otr eng-whole" type="button" disabled>Whole Group</button>
+          <button id="engSmallBtn" class="btn otr eng-small" type="button" disabled>Small Group</button>
+          <button id="engPartnersBtn" class="btn otr eng-partners" type="button" disabled>Precision Partners</button>
+        </div>
+        <div id="engButtons2" class="otrRow" style="display: none; grid-template-columns: 1fr 1fr 1fr;" aria-label="Engagement buttons 2">
+          <button id="engChoralBtn" class="btn otr eng-choral" type="button" disabled>Choral Response</button>
+          <button id="engClozeBtn" class="btn otr eng-cloze" type="button" disabled>Cloze Reading</button>
+          <button id="engWhiteboardBtn" class="btn otr eng-whiteboard" type="button" disabled>White Board Response</button>
+        </div>
+
+        <div class="bottomRow" aria-label="Stop, undo and reset buttons">
+          <button id="undoBtn" class="btn" type="button" disabled>Undo</button>
+          <button id="resetBtn" class="btn reset restart" type="button" title="Reset timer and OTR" aria-label="Reset">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button id="stopBtn" class="btn stop" type="button" disabled>Stop</button>
+        </div>
+      </section>
+
+      <footer class="fineprint">
+        <span id="hintText">Press Start to begin. Then tap an OTR button for each observed response.</span>
+      </footer>
+    </main>
+
+    <div id="engagementModal" class="modal-overlay" style="display:none;">
+      <div class="modal-content">
+        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Engagement Check</h2>
+        <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">Please enter the following information:</p>
+        
+        <label class="field">
+          <span class="label">How many students are in the class?</span>
+          <input type="number" id="engTotalStudents" class="control" min="0" />
+        </label>
+        
+        <label class="field">
+          <span class="label">How many students are off task?</span>
+          <input type="number" id="engOffTaskStudents" class="control" min="0" />
+        </label>
+
+        <button id="engRecordBtn" class="btn primary" style="margin-top: 16px;" disabled>Record</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="screen-results">
+    <main class="card">
+      <header class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 id="resultsTitle">OTR Results</h1>
+          <p class="subhead" id="resultsContext"></p>
+        </div>
+        <button id="resultsBackBtn" class="btn primary" style="min-height: auto; padding: 8px 16px; font-size: 14px; width: auto; border-radius: 999px; background-color: #6b7280; color: #fff; border: none;" type="button">Back</button>
+      </header>
+
+      <section class="actions" style="margin-top: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--hairline);">
+        <div class="fineprint" style="width: 100%; text-align: center; margin-bottom: 8px; border-top: none; padding-top: 0; color: #1f9d55; font-weight: bold;">Clicking Share copies an image of these results that can be pasted into an email or spreadsheet.</div>
+        <div style="display:flex; gap:12px; width:100%;">
+          <button id="shareBtn" class="btn" type="button" style="flex:1;">Share</button>
+          <button id="restartBtn" class="btn restart" type="button" style="flex:1;">Restart</button>
+        </div>
+        <div id="shareStatus" class="fineprint" aria-live="polite" style="width: 100%; text-align: center; margin-top: 4px; border-top: none; padding-top: 0;"></div>
+      </section>
+
+      <div id="resultsNotesContainer" style="display:flex; flex-direction: column; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid var(--hairline); padding-bottom: 16px;">
+         <span class="label" style="font-weight:bold; font-size:12px; color:var(--muted);">Notes</span>
+         <textarea id="resultsNotesText" class="notes-input" style="margin-top:8px; width:100%; font-weight:bold; min-height: 80px;" placeholder="Type notes here..." aria-label="Observation notes"></textarea>
+      </div>
+
+      <section class="results-grid" id="resultsGrid">
+      </section>
+
+    </main>
+  </template>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const state = {
+        educatorName: "",
+        lessonTargetPosted: null,
+        curriculaMaterialsUsed: null,
+        mode: "OTRs",
+        notes: "",
+        startedAt: null,
+        stoppedAt: null,
+        startWall: null,
+        stopWall: null,
+        otrEvents: [], // { tMs, kind: "warm"|"cold"|"volunteer"|"group" }
+        engagementChecks: [], // { timeMs, totalStudents, offTaskStudents }
+        engagementPopupsShown: {}, // { "1": true, "5": true, "9": true }
+        tickerId: null,
+        currentScreen: "setup"
+      };
+
+      function pad2(n){ return String(n).padStart(2, "0"); }
+      function formatElapsed(ms){
+        const totalSeconds = ms / 1000;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+        const tenths = Math.floor((ms % 1000) / 100);
+        return `${pad2(minutes)}:${pad2(seconds)}.${tenths}`;
+      }
+      function formatTime(dt){ return dt ? dt.toLocaleTimeString() : ""; }
+
+      function clearTimers(){
+        if (state.tickerId !== null){
+          clearInterval(state.tickerId);
+          state.tickerId = null;
+        }
+      }
+
+      function resetRunData(){
+        clearTimers();
+        state.startedAt = null;
+        state.stoppedAt = null;
+        state.startWall = null;
+        state.stopWall = null;
+        state.otrEvents = [];
+        state.notes = "";
+        state.engagementChecks = [];
+        state.engagementPopupsShown = {};
+      }
+
+      function mountTemplate(id){
+        const tpl = document.getElementById(id);
+        app.innerHTML = "";
+        app.appendChild(tpl.content.cloneNode(true));
+      }
+
+      function showSetup(){
+        state.currentScreen = "setup";
+        resetRunData();
+        mountTemplate("screen-setup");
+        const setupTitle = document.getElementById("setupTitle");
+        const educatorInput = document.getElementById("educatorInput");
+        const beginBtn = document.getElementById("beginBtn");
+
+        function updateBeginEnabled(){
+          beginBtn.disabled = !state.educatorName.trim();
+        }
+
+        setupTitle.textContent = "Walk Through Tool";
+        state.educatorName = "";
+        state.lessonTargetPosted = null;
+        state.curriculaMaterialsUsed = null;
+        updateBeginEnabled();
+
+        educatorInput.addEventListener("input", (e) => {
+          state.educatorName = e.target.value;
+          updateBeginEnabled();
+        });
+        educatorInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !beginBtn.disabled) {
+            e.preventDefault();
+            beginBtn.click();
+          }
+        });
+
+        beginBtn.addEventListener("click", showModeSelect);
+      }
+
+      function showQuestions() {
+        state.currentScreen = "questions";
+        mountTemplate("screen-questions");
+
+        const q1YesBtn = document.getElementById("q1YesBtn");
+        const q1NoBtn = document.getElementById("q1NoBtn");
+        const q2YesBtn = document.getElementById("q2YesBtn");
+        const q2NoBtn = document.getElementById("q2NoBtn");
+        const nextBtn = document.getElementById("questionsNextBtn");
+
+        function updateUI() {
+          q1YesBtn.classList.toggle("selected", state.lessonTargetPosted === "Yes");
+          q1NoBtn.classList.toggle("selected", state.lessonTargetPosted === "No");
+          
+          q2YesBtn.classList.toggle("selected", state.curriculaMaterialsUsed === "Yes");
+          q2NoBtn.classList.toggle("selected", state.curriculaMaterialsUsed === "No");
+
+          nextBtn.disabled = !state.lessonTargetPosted || !state.curriculaMaterialsUsed;
+        }
+
+        q1YesBtn.addEventListener("click", () => { state.lessonTargetPosted = "Yes"; updateUI(); });
+        q1NoBtn.addEventListener("click", () => { state.lessonTargetPosted = "No"; updateUI(); });
+        
+        q2YesBtn.addEventListener("click", () => { state.curriculaMaterialsUsed = "Yes"; updateUI(); });
+        q2NoBtn.addEventListener("click", () => { state.curriculaMaterialsUsed = "No"; updateUI(); });
+
+        nextBtn.addEventListener("click", showResults);
+        
+        const backBtn = document.getElementById("questionsBackBtn");
+        backBtn.addEventListener("click", () => {
+          showRun(true);
+        });
+
+        updateUI();
+      }
+
+      function showModeSelect() {
+        state.currentScreen = "mode-select";
+        mountTemplate("screen-mode-select");
+
+        document.getElementById("modeSelectBackBtn").addEventListener("click", () => {
+          showSetup();
+        });
+
+        document.getElementById("modeOtrBtn").addEventListener("click", () => {
+          state.mode = "OTRs";
+          showRun();
+        });
+        document.getElementById("modePraiseBtn").addEventListener("click", () => {
+          state.mode = "Praise";
+          showRun();
+        });
+        document.getElementById("modeEngagementBtn").addEventListener("click", () => {
+          state.mode = "Engagement";
+          showRun();
+        });
+        document.getElementById("modeAllBtn").addEventListener("click", () => {
+          state.mode = "All";
+          showRun();
+        });
+      }
+
+      function showRun(restore = false){
+        state.currentScreen = "run";
+        if (!restore) {
+          resetRunData();
+        }
+        mountTemplate("screen-run");
+        const runTitle = document.getElementById("runTitle");
+        const runContext = document.getElementById("runContext");
+        const elapsedText = document.getElementById("elapsedText");
+        const otrTotalText = document.getElementById("otrTotalText");
+        const totalKicker = document.getElementById("totalKicker");
+
+        if (state.mode === "Praise") {
+          runTitle.textContent = "Praise Timer";
+          totalKicker.textContent = "Total Statements";
+        } else if (state.mode === "Engagement") {
+          runTitle.textContent = "Engagement Timer";
+          totalKicker.textContent = "Total Engagement";
+        } else if (state.mode === "All") {
+          runTitle.textContent = "All Timer";
+          totalKicker.textContent = "Total Events";
+        } else {
+          runTitle.textContent = "OTR Timer";
+          totalKicker.textContent = "Total OTR";
+        }
+
+        const startBtn = document.getElementById("startBtn");
+
+        const otrButtons1 = document.getElementById("otrButtons1");
+        const otrButtons2 = document.getElementById("otrButtons2");
+        const praiseButtons = document.getElementById("praiseButtons");
+        const engButtons1 = document.getElementById("engButtons1");
+        const engButtons2 = document.getElementById("engButtons2");
+        
+        const otrSectionLabel = document.getElementById("otrSectionLabel");
+        const praiseSectionLabel = document.getElementById("praiseSectionLabel");
+        const engSectionLabel = document.getElementById("engSectionLabel");
+
+        if (state.mode === "Praise") {
+          otrButtons1.style.display = "none";
+          otrButtons2.style.display = "none";
+          praiseButtons.style.display = "grid";
+          engButtons1.style.display = "none";
+          engButtons2.style.display = "none";
+          otrSectionLabel.style.display = "none";
+          praiseSectionLabel.style.display = "none";
+          engSectionLabel.style.display = "none";
+        } else if (state.mode === "Engagement") {
+          otrButtons1.style.display = "none";
+          otrButtons2.style.display = "none";
+          praiseButtons.style.display = "none";
+          engButtons1.style.display = "grid";
+          engButtons2.style.display = "grid";
+          otrSectionLabel.style.display = "none";
+          praiseSectionLabel.style.display = "none";
+          engSectionLabel.style.display = "none";
+        } else if (state.mode === "All") {
+          otrButtons1.style.display = "grid";
+          otrButtons2.style.display = "grid";
+          praiseButtons.style.display = "grid";
+          engButtons1.style.display = "grid";
+          engButtons2.style.display = "grid";
+          otrSectionLabel.style.display = "block";
+          praiseSectionLabel.style.display = "block";
+          engSectionLabel.style.display = "block";
+        } else {
+          otrButtons1.style.display = "grid";
+          otrButtons2.style.display = "grid";
+          praiseButtons.style.display = "none";
+          engButtons1.style.display = "none";
+          engButtons2.style.display = "none";
+          otrSectionLabel.style.display = "none";
+          praiseSectionLabel.style.display = "none";
+          engSectionLabel.style.display = "none";
+        }
+
+        const otrGroupBtn = document.getElementById("otrGroupBtn");
+        const otrWarmBtn = document.getElementById("otrWarmBtn");
+        const otrColdBtn = document.getElementById("otrColdBtn");
+        const otrVolunteerBtn = document.getElementById("otrVolunteerBtn");
+
+        const praiseSpecificBtn = document.getElementById("praiseSpecificBtn");
+        const praiseGeneralBtn = document.getElementById("praiseGeneralBtn");
+        const praiseCorrectiveBtn = document.getElementById("praiseCorrectiveBtn");
+        const praiseRedirectBtn = document.getElementById("praiseRedirectBtn");
+        const praiseGenCritBtn = document.getElementById("praiseGenCritBtn");
+        const praiseIndCritBtn = document.getElementById("praiseIndCritBtn");
+
+        const engWholeBtn = document.getElementById("engWholeBtn");
+        const engSmallBtn = document.getElementById("engSmallBtn");
+        const engPartnersBtn = document.getElementById("engPartnersBtn");
+        const engChoralBtn = document.getElementById("engChoralBtn");
+        const engClozeBtn = document.getElementById("engClozeBtn");
+        const engWhiteboardBtn = document.getElementById("engWhiteboardBtn");
+
+        const resetBtn = document.getElementById("resetBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const hintText = document.getElementById("hintText");
+
+        const runBackBtn = document.getElementById("runBackBtn");
+        runBackBtn.addEventListener("click", () => {
+          clearTimers();
+          showModeSelect();
+        });
+
+        runContext.textContent = `Observed Educator Name: ${state.educatorName}`;
+
+        const engagementModal = document.getElementById("engagementModal");
+        const engTotalStudents = document.getElementById("engTotalStudents");
+        const engOffTaskStudents = document.getElementById("engOffTaskStudents");
+        const engRecordBtn = document.getElementById("engRecordBtn");
+
+        function updateUI(){
+          const now = performance.now();
+          const end = state.stoppedAt !== null ? state.stoppedAt : now;
+          const elapsed = (typeof state.startedAt === "number") ? (end - state.startedAt) : 0;
+
+          elapsedText.textContent = formatElapsed(Math.max(0, elapsed));
+          otrTotalText.textContent = String(state.otrEvents.length);
+
+          if ((state.mode === "Engagement" || state.mode === "All") && state.startedAt !== null && state.stoppedAt === null) {
+            const minutesElapsed = elapsed / 60000;
+            const checkTimes = [1, 5, 9];
+            for (const t of checkTimes) {
+              if (minutesElapsed >= t && !state.engagementPopupsShown[t]) {
+                state.engagementPopupsShown[t] = true;
+                showEngagementModal(t);
+              }
+            }
+          }
+        }
+
+        let currentEngagementCheckTime = null;
+        function showEngagementModal(timeMin) {
+          currentEngagementCheckTime = timeMin;
+          engTotalStudents.value = "";
+          engOffTaskStudents.value = "";
+          engRecordBtn.disabled = true;
+          engagementModal.style.display = "flex";
+        }
+
+        function updateEngRecordBtn() {
+          engRecordBtn.disabled = !engTotalStudents.value || !engOffTaskStudents.value;
+        }
+
+        engTotalStudents.addEventListener("input", updateEngRecordBtn);
+        engOffTaskStudents.addEventListener("input", updateEngRecordBtn);
+
+        engRecordBtn.addEventListener("click", () => {
+          if (!engTotalStudents.value || !engOffTaskStudents.value) return;
+          
+          state.engagementChecks.push({
+            timeMin: currentEngagementCheckTime,
+            totalStudents: parseInt(engTotalStudents.value, 10),
+            offTaskStudents: parseInt(engOffTaskStudents.value, 10)
+          });
+          
+          engagementModal.style.display = "none";
+        });
+
+
+        function setOtrEnabled(on){
+          otrGroupBtn.disabled = !on;
+          otrWarmBtn.disabled = !on;
+          otrColdBtn.disabled = !on;
+          otrVolunteerBtn.disabled = !on;
+
+          praiseSpecificBtn.disabled = !on;
+          praiseGeneralBtn.disabled = !on;
+          praiseCorrectiveBtn.disabled = !on;
+          praiseRedirectBtn.disabled = !on;
+          praiseGenCritBtn.disabled = !on;
+          praiseIndCritBtn.disabled = !on;
+          
+          engWholeBtn.disabled = !on;
+          engSmallBtn.disabled = !on;
+          engPartnersBtn.disabled = !on;
+          engChoralBtn.disabled = !on;
+          engClozeBtn.disabled = !on;
+          engWhiteboardBtn.disabled = !on;
+        }
+
+        const undoBtn = document.getElementById("undoBtn");
+        function updateUndoBtn() {
+          undoBtn.disabled = state.startedAt === null || state.stoppedAt !== null || state.otrEvents.length === 0;
+        }
+
+        function doUndo() {
+          if (state.startedAt === null || state.stoppedAt !== null || state.otrEvents.length === 0) return;
+          state.otrEvents.pop();
+          otrTotalText.textContent = String(state.otrEvents.length);
+          updateUndoBtn();
+          setOtrEnabled(true);
+        }
+
+        function doStart(){
+          if (state.startedAt !== null) return;
+          state.startWall = new Date();
+          state.stopWall = null;
+          state.startedAt = performance.now();
+          state.stoppedAt = null;
+          setOtrEnabled(true);
+          stopBtn.disabled = false;
+          startBtn.disabled = true;
+          updateUndoBtn();
+          
+          const timerNotes = document.getElementById("timerNotes");
+          if (timerNotes) timerNotes.disabled = false;
+
+          hintText.textContent = "Tap Whole Group, Warm Call, Cold Call, or Volunteer for each observed response.";
+          state.tickerId = setInterval(updateUI, 100);
+          updateUI();
+        }
+
+        function doOtr(kind){
+          if (state.startedAt === null || state.stoppedAt !== null) return;
+          const tMs = performance.now() - state.startedAt;
+          state.otrEvents.push({ tMs, kind });
+          otrTotalText.textContent = String(state.otrEvents.length);
+          updateUndoBtn();
+          setOtrEnabled(true);
+        }
+
+        function doStop(){
+          if (state.startedAt === null) return;
+          if (state.stoppedAt !== null) {
+            showQuestions();
+            return;
+          }
+          setOtrEnabled(false);
+          stopBtn.disabled = true;
+          state.stoppedAt = performance.now();
+          state.stopWall = new Date();
+          updateUndoBtn();
+
+          clearTimers();
+          showQuestions();
+        }
+
+        function doReset(){
+          clearTimers();
+          state.startedAt = null;
+          state.stoppedAt = null;
+          state.startWall = null;
+          state.stopWall = null;
+          state.otrEvents = [];
+          state.notes = "";
+
+          elapsedText.textContent = "00:00.0";
+          otrTotalText.textContent = "0";
+          const timerNotes = document.getElementById("timerNotes");
+          if (timerNotes) {
+            timerNotes.value = "";
+            timerNotes.disabled = true;
+          }
+
+          startBtn.disabled = false;
+          setOtrEnabled(false);
+          stopBtn.disabled = true;
+          stopBtn.textContent = "Stop";
+          updateUndoBtn();
+
+          hintText.textContent = "Timer reset. Press Start to begin again.";
+        }
+
+        undoBtn.addEventListener("click", doUndo);
+        startBtn.addEventListener("click", doStart);
+
+        otrGroupBtn.addEventListener("click", () => doOtr("group"));
+        otrWarmBtn.addEventListener("click", () => doOtr("warm"));
+        otrColdBtn.addEventListener("click", () => doOtr("cold"));
+        otrVolunteerBtn.addEventListener("click", () => doOtr("volunteer"));
+
+        praiseSpecificBtn.addEventListener("click", () => doOtr("specific"));
+        praiseGeneralBtn.addEventListener("click", () => doOtr("general"));
+        praiseCorrectiveBtn.addEventListener("click", () => doOtr("corrective"));
+        praiseRedirectBtn.addEventListener("click", () => doOtr("redirect"));
+        praiseGenCritBtn.addEventListener("click", () => doOtr("genCrit"));
+        praiseIndCritBtn.addEventListener("click", () => doOtr("indCrit"));
+
+        engWholeBtn.addEventListener("click", () => doOtr("engWhole"));
+        engSmallBtn.addEventListener("click", () => doOtr("engSmall"));
+        engPartnersBtn.addEventListener("click", () => doOtr("engPartners"));
+        engChoralBtn.addEventListener("click", () => doOtr("engChoral"));
+        engClozeBtn.addEventListener("click", () => doOtr("engCloze"));
+        engWhiteboardBtn.addEventListener("click", () => doOtr("engWhiteboard"));
+
+        stopBtn.addEventListener("click", doStop);
+        resetBtn.addEventListener("click", doReset);
+
+        const timerNotes = document.getElementById("timerNotes");
+        timerNotes.value = state.notes;
+        timerNotes.addEventListener("input", (e) => {
+          state.notes = e.target.value;
+        });
+
+        if (state.startedAt === null) {
+          timerNotes.disabled = true;
+        } else if (state.stoppedAt !== null) {
+          const durationMs = state.stoppedAt - state.startedAt;
+          elapsedText.textContent = formatElapsed(durationMs);
+          otrTotalText.textContent = String(state.otrEvents.length);
+          
+          startBtn.disabled = true;
+          setOtrEnabled(false);
+          updateUndoBtn();
+          
+          stopBtn.disabled = false;
+          stopBtn.textContent = "Next";
+          
+          timerNotes.disabled = false;
+          hintText.textContent = "Timer stopped. You can edit your notes or proceed.";
+        } else {
+          timerNotes.disabled = false;
+        }
+      }
+
+      function computeBinsByKind(events, durationMs){
+        const minutes = Math.max(1, Math.ceil(Math.max(0, durationMs) / 60000));
+        const bins = {
+          total: new Array(minutes).fill(0),
+          group: new Array(minutes).fill(0),
+          warm: new Array(minutes).fill(0),
+          cold: new Array(minutes).fill(0),
+          volunteer: new Array(minutes).fill(0),
+          specific: new Array(minutes).fill(0),
+          general: new Array(minutes).fill(0),
+          corrective: new Array(minutes).fill(0),
+          redirect: new Array(minutes).fill(0),
+          genCrit: new Array(minutes).fill(0),
+          indCrit: new Array(minutes).fill(0),
+          engWhole: new Array(minutes).fill(0),
+          engSmall: new Array(minutes).fill(0),
+          engPartners: new Array(minutes).fill(0),
+          engChoral: new Array(minutes).fill(0),
+          engCloze: new Array(minutes).fill(0),
+          engWhiteboard: new Array(minutes).fill(0)
+        };
+        for (const e of events){
+          const idx = Math.min(minutes - 1, Math.max(0, Math.floor(e.tMs / 60000)));
+          bins.total[idx] += 1;
+          if (e.kind === "group") bins.group[idx] += 1;
+          if (e.kind === "warm") bins.warm[idx] += 1;
+          if (e.kind === "cold") bins.cold[idx] += 1;
+          if (e.kind === "volunteer") bins.volunteer[idx] += 1;
+          if (e.kind === "specific") bins.specific[idx] += 1;
+          if (e.kind === "general") bins.general[idx] += 1;
+          if (e.kind === "corrective") bins.corrective[idx] += 1;
+          if (e.kind === "redirect") bins.redirect[idx] += 1;
+          if (e.kind === "genCrit") bins.genCrit[idx] += 1;
+          if (e.kind === "indCrit") bins.indCrit[idx] += 1;
+          if (e.kind === "engWhole") bins.engWhole[idx] += 1;
+          if (e.kind === "engSmall") bins.engSmall[idx] += 1;
+          if (e.kind === "engPartners") bins.engPartners[idx] += 1;
+          if (e.kind === "engChoral") bins.engChoral[idx] += 1;
+          if (e.kind === "engCloze") bins.engCloze[idx] += 1;
+          if (e.kind === "engWhiteboard") bins.engWhiteboard[idx] += 1;
+        }
+        return bins;
+      }
+
+      function el(ns, tag, attrs, text){
+        const node = document.createElementNS(ns, tag);
+        for (const [k,v] of Object.entries(attrs || {})) node.setAttribute(k, String(v));
+        if (text !== undefined) node.textContent = text;
+        return node;
+      }
+
+      function pickIntTicks(yMax, targetCount){
+        const ticks = new Set([0, yMax]);
+        if (yMax <= targetCount){
+          for (let i = 0; i <= yMax; i++) ticks.add(i);
+          return Array.from(ticks).sort((a,b)=>a-b);
+        }
+        const step = Math.max(1, Math.round(yMax / targetCount));
+        for (let v = 0; v <= yMax; v += step) ticks.add(v);
+        ticks.add(yMax);
+        return Array.from(ticks).sort((a,b)=>a-b);
+      }
+
+      function renderEngagementStackedBarChartSVG(events, durationMs) {
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        const W = 800;
+        const H = 450;
+        const pad = { l: 40, r: 200, t: 60, b: 80 };
+        const innerW = W - pad.l - pad.r;
+        const innerH = H - pad.t - pad.b;
+
+        const svg = el(svgNS, "svg", {
+          viewBox: `0 0 ${W} ${H}`,
+          width: W,
+          height: H,
+          style: "max-width:100%; height:auto; background:#fff; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:14px;"
+        });
+
+        svg.appendChild(el(svgNS, "rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
+
+        const categories = [
+          { key: "engWhole", color: "#7dd3fc", lineColor: "#0369a1", label: "Whole Group" },
+          { key: "engSmall", color: "#bae6fd", lineColor: "#0284c7", label: "Small Group" },
+          { key: "engPartners", color: "#e0f2fe", lineColor: "#38bdf8", label: "Precision Partners" },
+          { key: "engChoral", color: "#fcd34d", lineColor: "#d97706", label: "Choral Response" },
+          { key: "engCloze", color: "#fde68a", lineColor: "#f59e0b", label: "Cloze Reading" },
+          { key: "engWhiteboard", color: "#fef3c7", lineColor: "#fbbf24", label: "White Board Response" }
+        ];
+
+        const maxMs = Math.max(durationMs, 60000);
+        const maxMinutes = Math.ceil(maxMs / 60000);
+        
+        const x = (ms) => pad.l + (ms / (maxMinutes * 60000)) * innerW;
+
+        // X-axis grid lines (Minutes)
+        for (let m = 0; m <= maxMinutes; m++) {
+          const tx = x(m * 60000);
+          svg.appendChild(el(svgNS, "line", {
+            x1: tx, y1: pad.t, x2: tx, y2: pad.t + innerH,
+            stroke: "rgba(0,0,0,.05)", "stroke-width": 1
+          }));
+          svg.appendChild(el(svgNS, "text", {
+            x: tx, y: pad.t + innerH + 18, "text-anchor": "middle",
+            "font-size": 14, fill: "rgba(0,0,0,.60)"
+          }, String(m)));
+        }
+
+        // X-axis label
+        svg.appendChild(el(svgNS, "text", {
+          x: pad.l + innerW / 2, y: pad.t + innerH + 40, "text-anchor": "middle",
+          "font-size": 14, fill: "rgba(0,0,0,.60)"
+        }, "Minutes"));
+
+        // Single background row for the timeline
+        svg.appendChild(el(svgNS, "rect", {
+          x: pad.l, y: pad.t, width: innerW, height: innerH,
+          fill: "rgba(0,0,0,.02)", stroke: "rgba(0,0,0,.1)", "stroke-width": 1
+        }));
+
+        // Draw events as continuous vertical bands extending horizontally
+        for (let j = 0; j < events.length; j++) {
+          const ev = events[j];
+          const catIdx = categories.findIndex(c => c.key === ev.kind);
+          if (catIdx >= 0) {
+            const startMs = ev.tMs;
+            const endMs = (j + 1 < events.length) ? events[j + 1].tMs : durationMs;
+            const ex1 = x(startMs);
+            const ex2 = x(endMs);
+            
+            svg.appendChild(el(svgNS, "rect", {
+              x: ex1, y: pad.t, width: Math.max(0, ex2 - ex1), height: innerH,
+              fill: categories[catIdx].color
+            }));
+            
+            // Draw a slim line at the start of each event to mark the button click
+            svg.appendChild(el(svgNS, "line", {
+              x1: ex1, y1: pad.t, x2: ex1, y2: pad.t + innerH,
+              stroke: categories[catIdx].lineColor, "stroke-width": 2
+            }));
+          }
+        }
+
+        // Draw vivid dots for engagement checks
+        if (state.engagementChecks && state.engagementChecks.length > 0) {
+          for (const check of state.engagementChecks) {
+            const cx = x(check.timeMin * 60000);
+            
+            // Draw a vertical line for the check
+            svg.appendChild(el(svgNS, "line", {
+              x1: cx, y1: pad.t, x2: cx, y2: pad.t + innerH,
+              stroke: "#e11d48", "stroke-width": 2, "stroke-dasharray": "4,4"
+            }));
+            
+            // Draw the vivid dot at the top
+            svg.appendChild(el(svgNS, "circle", {
+              cx: cx, cy: pad.t - 6, r: 6,
+              fill: "#e11d48"
+            }));
+            
+            // Label the dot
+            svg.appendChild(el(svgNS, "text", {
+              x: cx, y: pad.t - 18, "text-anchor": "middle",
+              "font-size": 14, "font-weight": "bold", fill: "#e11d48"
+            }, `${check.offTaskStudents}/${check.totalStudents}`));
+          }
+        }
+        
+        // Axes borders
+        svg.appendChild(el(svgNS, "line", { x1: pad.l, y1: pad.t + innerH, x2: pad.l + innerW, y2: pad.t + innerH, stroke: "rgba(0,0,0,.25)", "stroke-width": 1 }));
+        svg.appendChild(el(svgNS, "line", { x1: pad.l, y1: pad.t, x2: pad.l, y2: pad.t + innerH, stroke: "rgba(0,0,0,.25)", "stroke-width": 1 }));
+
+        // Legend on the right
+        const lx = pad.l + innerW + 18;
+        const lyStart = pad.t + 8;
+        const lh = 22;
+        
+        categories.forEach((cat, i) => {
+           const ly = lyStart + (i * lh);
+           
+           svg.appendChild(el(svgNS, "rect", {
+              x: lx, y: ly - 12, width: 14, height: 14,
+              fill: cat.color, rx: 2
+           }));
+           
+           svg.appendChild(el(svgNS, "text", {
+              x: lx + 20, y: ly, "text-anchor": "start",
+              "font-size": 14, fill: "rgba(0,0,0,.75)"
+           }, cat.label));
+        });
+
+        return svg;
+      }
+
+      function renderOtrMultiLineChartSVG(events, durationMs){
+        const W = 800, H = 450;
+        const pad = { l: 50, r: 200, t: 16, b: 80 };
+        const innerW = W - pad.l - pad.r;
+        const innerH = H - pad.t - pad.b;
+
+        const bins = computeBinsByKind(events, durationMs);
+        const n = bins.total.length;
+
+        const allMax = Math.max(
+          5,
+          ...bins.total,
+          ...bins.group,
+          ...bins.warm,
+          ...bins.cold,
+          ...bins.volunteer,
+          ...bins.specific,
+          ...bins.general,
+          ...bins.corrective,
+          ...bins.redirect,
+          ...bins.genCrit,
+          ...bins.indCrit,
+          ...bins.engWhole,
+          ...bins.engSmall,
+          ...bins.engPartners,
+          ...bins.engChoral,
+          ...bins.engCloze,
+          ...bins.engWhiteboard
+        );
+
+        const x = (i1) => {
+          const denom = Math.max(1, (n - 1));
+          return pad.l + ((i1 - 1) / denom) * innerW;
+        };
+        const y = (v) => pad.t + innerH - (v / allMax) * innerH;
+        const yTicks = pickIntTicks(allMax, 4);
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("xmlns", svgNS);
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        svg.setAttribute("width", String(W));
+        svg.setAttribute("height", String(H));
+        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+        svg.appendChild(el(svgNS, "rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
+
+        for (const t of yTicks){
+          const gy = y(t);
+          svg.appendChild(el(svgNS, "line", { x1: pad.l, y1: gy, x2: pad.l + innerW, y2: gy, stroke: "rgba(0,0,0,.08)", "stroke-width": 1 }));
+          svg.appendChild(el(svgNS, "text", {
+            x: pad.l - 10, y: gy + 5, "text-anchor": "end",
+            "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+            fill: "rgba(0,0,0,.65)"
+          }, String(t)));
+        }
+
+        if (state.mode === "OTRs") {
+          const y3 = y(3);
+          const y5 = y(5);
+          svg.appendChild(el(svgNS, "rect", {
+            x: pad.l,
+            y: y5,
+            width: innerW,
+            height: y3 - y5,
+            fill: "rgba(31, 157, 85, 0.12)"
+          }));
+        }
+
+        svg.appendChild(el(svgNS, "line", { x1: pad.l, y1: pad.t + innerH, x2: pad.l + innerW, y2: pad.t + innerH, stroke: "rgba(0,0,0,.25)", "stroke-width": 1 }));
+        svg.appendChild(el(svgNS, "line", { x1: pad.l, y1: pad.t, x2: pad.l, y2: pad.t + innerH, stroke: "rgba(0,0,0,.25)", "stroke-width": 1 }));
+
+        const tickEvery = (n <= 10) ? 1 : Math.ceil(n / 6);
+        for (let i = 1; i <= n; i++){
+          const shouldLabel = (i === 1) || (i === n) || (i % tickEvery === 0);
+          if (!shouldLabel) continue;
+          const gx = x(i);
+          svg.appendChild(el(svgNS, "text", {
+            x: gx, y: pad.t + innerH + 18, "text-anchor": "middle",
+            "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+            fill: "rgba(0,0,0,.65)"
+          }, String(i)));
+        }
+
+        function addSeries(series, stroke, strokeWidth, withPoints, dashArray){
+          const pts = [];
+          for (let i = 1; i <= n; i++){
+            pts.push({ mx: x(i), my: y(series[i - 1]) });
+          }
+          const pathD = pts.map((p, idx) => `${idx === 0 ? "M" : "L"} ${p.mx.toFixed(2)} ${p.my.toFixed(2)}`).join(" ");
+          const attrs = { d: pathD, fill: "none", stroke, "stroke-width": strokeWidth, opacity: "0.6" };
+          if (dashArray) attrs["stroke-dasharray"] = dashArray;
+          svg.appendChild(el(svgNS, "path", attrs));
+          if (withPoints){
+            for (const p of pts){
+              svg.appendChild(el(svgNS, "circle", { cx: p.mx, cy: p.my, r: 3.0, fill: stroke, opacity: "0.6" }));
+            }
+          }
+        }
+
+        const css = getComputedStyle(document.documentElement);
+        const cTotal = css.getPropertyValue("--otr-total").trim() || "rgba(0,0,0,0.2)";
+        const cGroup = css.getPropertyValue("--otr-group").trim() || "#a855f7";
+        const cWarm = css.getPropertyValue("--otr-warm").trim() || "#0b2a6f";
+        const cCold = css.getPropertyValue("--otr-cold").trim() || "#1a4fff";
+        const cVol = css.getPropertyValue("--otr-volunteer").trim() || "#9fb8ff";
+
+        const cSpecific = css.getPropertyValue("--praise-specific").trim() || "#1f9d55";
+        const cGeneral = css.getPropertyValue("--praise-general").trim() || "#86efac";
+        const cCorrective = css.getPropertyValue("--praise-corrective").trim() || "#3b82f6";
+        const cRedirect = css.getPropertyValue("--praise-redirect").trim() || "#f97316";
+        const cGenCrit = css.getPropertyValue("--praise-gen-crit").trim() || "#ef4444";
+        const cIndCrit = css.getPropertyValue("--praise-ind-crit").trim() || "#b91c1c";
+
+        const cEngWhole = css.getPropertyValue("--eng-whole").trim() || "#0369a1";
+        const cEngSmall = css.getPropertyValue("--eng-small").trim() || "#0284c7";
+        const cEngPartners = css.getPropertyValue("--eng-partners").trim() || "#38bdf8";
+        const cEngChoral = css.getPropertyValue("--eng-choral").trim() || "#d97706";
+        const cEngCloze = css.getPropertyValue("--eng-cloze").trim() || "#f59e0b";
+        const cEngWhiteboard = css.getPropertyValue("--eng-whiteboard").trim() || "#fbbf24";
+
+        if (state.mode === "Praise") {
+          addSeries(bins.indCrit, cIndCrit, 2, false);
+          addSeries(bins.genCrit, cGenCrit, 2, false);
+          addSeries(bins.redirect, cRedirect, 2, false);
+          addSeries(bins.corrective, cCorrective, 2, false);
+          addSeries(bins.general, cGeneral, 2, false);
+          addSeries(bins.specific, cSpecific, 3, false);
+        } else if (state.mode === "Engagement") {
+          addSeries(bins.engWhiteboard, cEngWhiteboard, 2, false);
+          addSeries(bins.engCloze, cEngCloze, 2, false);
+          addSeries(bins.engChoral, cEngChoral, 2, false);
+          addSeries(bins.engPartners, cEngPartners, 2, false);
+          addSeries(bins.engSmall, cEngSmall, 2, false);
+          addSeries(bins.engWhole, cEngWhole, 3, false, "3,6");
+        } else {
+          addSeries(bins.volunteer, cVol, 2, false);
+          addSeries(bins.cold, cCold, 2, false);
+          addSeries(bins.warm, cWarm, 2, false);
+          addSeries(bins.group, cGroup, 3, false);
+        }
+
+        svg.appendChild(el(svgNS, "text", {
+          x: pad.l + innerW / 2, y: pad.t + innerH + 40, "text-anchor": "middle",
+          "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+          fill: "rgba(0,0,0,.60)"
+        }, "Minute window"));
+
+        if (state.mode === "Praise") {
+          const totalSpecific = bins.specific.reduce((a, b) => a + b, 0);
+          const totalGeneral = bins.general.reduce((a, b) => a + b, 0);
+          const totalCorrective = bins.corrective.reduce((a, b) => a + b, 0);
+          const totalRedirect = bins.redirect.reduce((a, b) => a + b, 0);
+          const totalGenCrit = bins.genCrit.reduce((a, b) => a + b, 0);
+          const totalIndCrit = bins.indCrit.reduce((a, b) => a + b, 0);
+          const positive = totalSpecific + totalGeneral + totalCorrective;
+          const negative = totalRedirect + totalGenCrit + totalIndCrit;
+          const ratioText = formatPraiseRatio(positive, negative, durationMs);
+          
+          const ratioValue = negative === 0 ? positive : Math.round(positive / negative);
+          const isGoalMet = ratioValue >= 5;
+
+          svg.appendChild(el(svgNS, "text", {
+            x: pad.l + innerW / 2, y: pad.t + innerH + 60, "text-anchor": "middle",
+            "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+            "font-weight": "bold",
+            fill: "rgba(31, 157, 85, 0.85)"
+          }, "Goal: 5:1 positive to negative feedback"));
+
+          svg.appendChild(el(svgNS, "text", {
+            x: pad.l + innerW / 2, y: pad.t + innerH + 78, "text-anchor": "middle",
+            "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+            "font-weight": "bold",
+            fill: isGoalMet ? "rgba(31, 157, 85, 0.85)" : "rgba(220, 38, 38, 0.85)"
+          }, `Actual Positive to Negative (ratio): ${ratioText}`));
+        } else if (state.mode === "OTRs") {
+          svg.appendChild(el(svgNS, "text", {
+            x: pad.l + innerW / 2, y: pad.t + innerH + 60, "text-anchor": "middle",
+            "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+            "font-weight": "bold",
+            fill: "rgba(31, 157, 85, 0.85)"
+          }, "Goal: 3-5 OTRs per minute of instruction"));
+        }
+
+        svg.appendChild(el(svgNS, "text", {
+          x: 16, y: pad.t + innerH / 2, "text-anchor": "middle",
+          "font-size": 14, "font-family": "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+          fill: "rgba(0,0,0,.60)",
+          transform: `rotate(-90 16 ${pad.t + innerH / 2})`
+        }, state.mode === "Praise" ? "Praise per minute" : state.mode === "Engagement" ? "Engagement per minute" : "OTR per minute"));
+
+        const lx = pad.l + innerW + 18;
+        const ly = pad.t + 8;
+        const lh = 22;
+        const font = "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+
+        function legendRow(i, color, label, dashArray){
+          const y0 = ly + i * lh;
+          const attrs = { x1: lx, y1: y0, x2: lx + 22, y2: y0, stroke: color, "stroke-width": 3, "stroke-linecap": "round", opacity: "0.6" };
+          if (dashArray) attrs["stroke-dasharray"] = dashArray;
+          svg.appendChild(el(svgNS, "line", attrs));
+          svg.appendChild(el(svgNS, "text", {
+            x: lx + 30, y: y0 + 5, "text-anchor": "start",
+            "font-size": 14, "font-family": font,
+            fill: "rgba(0,0,0,.75)"
+          }, label));
+        }
+
+        if (state.mode === "Praise") {
+          legendRow(0, cSpecific, "Specific Praise");
+          legendRow(1, cGeneral, "General Praise");
+          legendRow(2, cCorrective, "Corrective Feedback");
+          legendRow(3, cRedirect, "Redirective Statements");
+          legendRow(4, cGenCrit, "General Criticism");
+          legendRow(5, cIndCrit, "Individual Criticism");
+        } else if (state.mode === "Engagement") {
+          legendRow(0, cEngWhole, "Whole Group", "3,6");
+          legendRow(1, cEngSmall, "Small Group");
+          legendRow(2, cEngPartners, "Precision Partners");
+          legendRow(3, cEngChoral, "Choral Response");
+          legendRow(4, cEngCloze, "Cloze Reading");
+          legendRow(5, cEngWhiteboard, "White Board Response");
+        } else {
+          legendRow(0, cGroup, "Whole Group");
+          legendRow(1, cWarm, "Warm Call");
+          legendRow(2, cCold, "Cold Call");
+          legendRow(3, cVol, "Volunteer");
+        }
+
+        return svg;
+      }
+
+      function svgElementToPngBlob(svgEl, scale = 2){
+        return new Promise((resolve, reject) => {
+          const serializer = new XMLSerializer();
+          const svgText = serializer.serializeToString(svgEl);
+          const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+          const url = URL.createObjectURL(svgBlob);
+          const img = new Image();
+          img.onload = () => {
+            const w = Number(svgEl.getAttribute("width")) || 720;
+            const h = Number(svgEl.getAttribute("height")) || 320;
+            const canvas = document.createElement("canvas");
+            const dpr = Math.max(1, window.devicePixelRatio || 1);
+            const s = Math.max(1, scale);
+            canvas.width = Math.floor(w * dpr * s);
+            canvas.height = Math.floor(h * dpr * s);
+            const ctx = canvas.getContext("2d");
+            ctx.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            canvas.toBlob((blob) => {
+              if (!blob) return reject(new Error("PNG render failed"));
+              resolve(blob);
+            }, "image/png");
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Image load failed"));
+          };
+          img.src = url;
+        });
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((resolve, _) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      function downloadBlob(blob, filename){
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      function safeFilename(){
+        const e = (state.educatorName || "Educator").replace(/[^\w]+/g, "_").replace(/^_+|_+$/g, "");
+        return `OTR_${e}.png`;
+      }
+
+      function formatOtrRatio(otrTotal, durationMs){
+        if (durationMs <= 60000) return `${otrTotal}:1`;
+        const minutesElapsed = durationMs / 60000;
+        const rate = minutesElapsed > 0 ? (otrTotal / minutesElapsed) : 0;
+        const rounded = Math.max(0, Math.round(rate));
+        return `${rounded}:1`;
+      }
+
+      function formatPraiseRatio(positive, negative, durationMs) {
+        if (negative === 0) return `${positive}:0`;
+        const ratio = Math.round(positive / negative);
+        return `${ratio}:1`;
+      }
+
+      function buildResultsLines({ educator, recordedOn, recordedFrom, durationMs, group, warm, cold, volunteer, specific, general, corrective, redirect, genCrit, indCrit, engWhole, engSmall, engPartners, engChoral, engCloze, engWhiteboard, otrTotal, ratioText, lessonTargetPosted, curriculaMaterialsUsed, notes, engagementChecks }){
+        const titlePrefix = state.mode === 'Praise' ? 'Praise' : state.mode === 'Engagement' ? 'Engagement' : 'OTR';
+        const lines = [
+          `${titlePrefix} Timer Results`,
+          `Observed Educator Name: ${educator}`
+        ];
+
+        if (notes) {
+          lines.push("Notes:");
+          const maxChars = 85;
+          const nl = notes.split('\n');
+          for (const n of nl) {
+            if (!n) {
+              lines.push("");
+              continue;
+            }
+            let currentLine = "";
+            const words = n.split(" ");
+            for (let word of words) {
+              while (word.length > maxChars) {
+                if (currentLine) {
+                  lines.push(`  ${currentLine.trimEnd()}`);
+                  currentLine = "";
+                }
+                lines.push(`  ${word.substring(0, maxChars)}`);
+                word = word.substring(maxChars);
+              }
+              if (!word) continue;
+              
+              if (currentLine.length + word.length > maxChars) {
+                lines.push(`  ${currentLine.trimEnd()}`);
+                currentLine = word + " ";
+              } else {
+                currentLine += word + " ";
+              }
+            }
+            if (currentLine) {
+              lines.push(`  ${currentLine.trimEnd()}`);
+            }
+          }
+        }
+
+        lines.push(
+          `Recorded on: ${recordedOn}`,
+          `Recorded from: ${recordedFrom}`,
+          `Time length: ${formatElapsed(durationMs)}`,
+          `Agreed upon teaching materials used: ${curriculaMaterialsUsed}`,
+          `Lesson target referenced: ${lessonTargetPosted}`
+        );
+
+        if (state.mode === "Praise") {
+          lines.push(`Specific Praise: ${specific}`);
+          lines.push(`General Praise: ${general}`);
+          lines.push(`Corrective Feedback: ${corrective}`);
+          lines.push(`Redirective Statements: ${redirect}`);
+          lines.push(`General Criticism: ${genCrit}`);
+          lines.push(`Individual Criticism: ${indCrit}`);
+          lines.push(`Total Statements: ${otrTotal}`);
+          lines.push(`Positive to Negative (ratio): ${ratioText}`);
+          lines.push(`Goal: 5:1 positive to negative feedback`);
+        } else if (state.mode === "Engagement") {
+          lines.push(`Whole Group: ${engWhole}`);
+          lines.push(`Small Group: ${engSmall}`);
+          lines.push(`Precision Partners: ${engPartners}`);
+          lines.push(`Choral Response: ${engChoral}`);
+          lines.push(`Cloze Reading: ${engCloze}`);
+          lines.push(`White Board Response: ${engWhiteboard}`);
+          lines.push(`Total Engagement: ${otrTotal}`);
+          lines.push(`Engagement per min (ratio): ${ratioText}`);
+          
+          if (engagementChecks && engagementChecks.length > 0) {
+            for (const check of engagementChecks) {
+              const percentOffTask = check.totalStudents > 0 ? Math.round((check.offTaskStudents / check.totalStudents) * 100) : 0;
+              lines.push(`Engagement Check (${check.timeMin} min): ${check.offTaskStudents} off task / ${check.totalStudents} total (${percentOffTask}%)`);
+            }
+          }
+        } else {
+          lines.push(`Whole Group OTR: ${group}`);
+          lines.push(`Warm Call OTR: ${warm}`);
+          lines.push(`Cold Call OTR: ${cold}`);
+          lines.push(`Volunteer OTR: ${volunteer}`);
+          lines.push(`OTR total: ${otrTotal}`);
+          lines.push(`OTR per min (ratio): ${ratioText}`);
+          lines.push(`Goal: 3-5 OTRs per minute of instruction`);
+        }
+        
+        if (notes) {
+          // Notes handled above after educator name
+        }
+        
+        return lines;
+      }
+
+      function renderResultsCompositeSVG(blocks){
+        const svgNS = "http://www.w3.org/2000/svg";
+        const W = 800;
+        const pad = 16;
+        const lineH = 20;
+        
+        let totalH = 0;
+        const fontSans = "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+
+        // Calculate heights and store block offsets
+        for (const block of blocks) {
+          block.textBlockH = pad + (block.lines.length * lineH) + 8;
+          block.chartH = block.chartSvg ? (Number(block.chartSvg.getAttribute("height")) || 450) : 0;
+          block.totalH = block.textBlockH + block.chartH + pad;
+          totalH += block.totalH;
+        }
+        
+        const H = totalH;
+
+        const root = document.createElementNS(svgNS, "svg");
+        root.setAttribute("xmlns", svgNS);
+        root.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        root.setAttribute("width", String(W));
+        root.setAttribute("height", String(H));
+        root.appendChild(el(svgNS, "rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
+
+        let currentYOffset = 0;
+
+        for (const block of blocks) {
+          for (let i = 0; i < block.lines.length; i++){
+            const isTitle = i === 0;
+            const lineText = block.lines[i];
+            const yPos = currentYOffset + pad + (i + 1) * lineH;
+
+            if (lineText.startsWith("Lesson target referenced:") || lineText.startsWith("Agreed upon teaching materials used:")) {
+              const isYes = lineText.endsWith("Yes");
+              const isNo = lineText.endsWith("No");
+              if (isYes || isNo) {
+                root.appendChild(el(svgNS, "rect", {
+                  x: pad - 4,
+                  y: yPos - lineH + 4,
+                  width: W - (pad * 2) + 8,
+                  height: lineH + 4,
+                  fill: isYes ? "rgba(134, 239, 172, 0.4)" : "rgba(252, 165, 165, 0.4)",
+                  rx: 4
+                }));
+              }
+            } else if (lineText.startsWith("Positive to Negative (ratio):")) {
+              const ratioStr = lineText.split("Positive to Negative (ratio):")[1].trim();
+              const ratioVal = parseInt(ratioStr.split(":")[0], 10);
+              if (!isNaN(ratioVal)) {
+                const isMet = ratioVal >= 5;
+                root.appendChild(el(svgNS, "rect", {
+                  x: pad - 4,
+                  y: yPos - lineH + 4,
+                  width: W - (pad * 2) + 8,
+                  height: lineH + 4,
+                  fill: isMet ? "rgba(134, 239, 172, 0.4)" : "rgba(252, 165, 165, 0.4)",
+                  rx: 4
+                }));
+              }
+            }
+
+            let isNoteLine = false;
+            if (lineText === "Notes:" || lineText.startsWith("  ")) {
+              isNoteLine = true;
+            }
+
+            root.appendChild(el(svgNS, "text", {
+              x: pad,
+              y: yPos,
+              "text-anchor": "start",
+              "font-size": isTitle ? 16 : 14,
+              "font-family": fontSans,
+              "font-weight": (isTitle || isNoteLine) ? 700 : 500,
+              fill: "rgba(0,0,0,.90)"
+            }, lineText));
+          }
+
+          if (block.chartSvg) {
+            root.appendChild(el(svgNS, "line", {
+              x1: pad, y1: currentYOffset + block.textBlockH - 6,
+              x2: W - pad, y2: currentYOffset + block.textBlockH - 6,
+              stroke: "rgba(0,0,0,.12)",
+              "stroke-width": 1
+            }));
+
+            const g = document.createElementNS(svgNS, "g");
+            g.setAttribute("transform", `translate(0 ${currentYOffset + block.textBlockH})`);
+            const cloned = block.chartSvg.cloneNode(true);
+            while (cloned.firstChild){
+              g.appendChild(cloned.firstChild);
+            }
+            root.appendChild(g);
+          }
+
+          currentYOffset += block.totalH;
+        }
+
+        return root;
+      }
+
+      function showResults(){
+        state.currentScreen = "results";
+        mountTemplate("screen-results");
+
+        const durationMs = state.stoppedAt - state.startedAt;
+        const bins = computeBinsByKind(state.otrEvents, durationMs);
+        
+        // Calculate new totals
+        const totalGroup = bins.group.reduce((a, b) => a + b, 0);
+        const totalWarm = bins.warm.reduce((a, b) => a + b, 0);
+        const totalCold = bins.cold.reduce((a, b) => a + b, 0);
+        const totalVol = bins.volunteer.reduce((a, b) => a + b, 0);
+
+        const totalSpecific = bins.specific.reduce((a, b) => a + b, 0);
+        const totalGeneral = bins.general.reduce((a, b) => a + b, 0);
+        const totalCorrective = bins.corrective.reduce((a, b) => a + b, 0);
+        const totalRedirect = bins.redirect.reduce((a, b) => a + b, 0);
+        const totalGenCrit = bins.genCrit.reduce((a, b) => a + b, 0);
+        const totalIndCrit = bins.indCrit.reduce((a, b) => a + b, 0);
+
+        const totalEngWhole = bins.engWhole.reduce((a, b) => a + b, 0);
+        const totalEngSmall = bins.engSmall.reduce((a, b) => a + b, 0);
+        const totalEngPartners = bins.engPartners.reduce((a, b) => a + b, 0);
+        const totalEngChoral = bins.engChoral.reduce((a, b) => a + b, 0);
+        const totalEngCloze = bins.engCloze.reduce((a, b) => a + b, 0);
+        const totalEngWhiteboard = bins.engWhiteboard.reduce((a, b) => a + b, 0);
+
+        const totalOtr = state.otrEvents.filter(e => ["group","warm","cold","volunteer"].includes(e.kind)).length;
+        const totalPraise = state.otrEvents.filter(e => ["specific","general","corrective","redirect","genCrit","indCrit"].includes(e.kind)).length;
+        const totalEngagement = state.otrEvents.filter(e => ["engWhole","engSmall","engPartners","engChoral","engCloze","engWhiteboard"].includes(e.kind)).length;
+        
+        const positivePraise = totalSpecific + totalGeneral + totalCorrective;
+        const negativePraise = totalRedirect + totalGenCrit + totalIndCrit;
+
+        const resultsTitle = document.getElementById("resultsTitle");
+        
+        if (state.mode === "Praise") {
+          resultsTitle.textContent = "Praise Results";
+        } else if (state.mode === "Engagement") {
+          resultsTitle.textContent = "Engagement Results";
+        } else if (state.mode === "All") {
+          resultsTitle.textContent = "All Results";
+        } else {
+          resultsTitle.textContent = "OTR Results";
+        }
+
+        document.getElementById("resultsContext").textContent = `Observed Educator Name: ${state.educatorName}`;
+        
+        const resultsGrid = document.getElementById("resultsGrid");
+        resultsGrid.innerHTML = "";
+        
+        const renderModes = state.mode === "All" ? ["OTRs", "Praise", "Engagement"] : [state.mode];
+        const sharedBlocks = [];
+        
+        const createSummaryRow = (k, v) => {
+          const row = document.createElement("div");
+          row.className = "row";
+
+          if (k === "Lesson target referenced" || k === "Agreed upon teaching materials used") {
+            if (v === "Yes") {
+              row.style.backgroundColor = "rgba(134, 239, 172, 0.3)";
+              row.style.padding = "8px";
+              row.style.borderRadius = "4px";
+            } else if (v === "No") {
+              row.style.backgroundColor = "rgba(252, 165, 165, 0.3)";
+              row.style.padding = "8px";
+              row.style.borderRadius = "4px";
+            }
+          } else if (k === "Positive to Negative (ratio)") {
+            const ratioVal = parseInt(v.split(":")[0], 10);
+            if (!isNaN(ratioVal)) {
+              if (ratioVal >= 5) {
+                row.style.backgroundColor = "rgba(134, 239, 172, 0.3)";
+                row.style.padding = "8px";
+                row.style.borderRadius = "4px";
+              } else {
+                row.style.backgroundColor = "rgba(252, 165, 165, 0.3)";
+                row.style.padding = "8px";
+                row.style.borderRadius = "4px";
+              }
+            }
+          }
+
+          row.innerHTML = `<span class="k">${k}</span><span class="v">${v}</span>`;
+          return row;
+        };
+        
+        for (const renderMode of renderModes) {
+          const modeContainer = document.createElement("div");
+          modeContainer.className = "mode-container";
+          
+          const summaryContainer = document.createElement("div");
+          summaryContainer.className = "summary";
+          
+          if (renderMode === renderModes[0]) {
+            summaryContainer.appendChild(createSummaryRow("Educator", state.educatorName));
+            summaryContainer.appendChild(createSummaryRow("Recorded on", state.startWall ? state.startWall.toLocaleDateString() : ""));
+            summaryContainer.appendChild(createSummaryRow("Recorded from", `${formatTime(state.startWall)} to ${formatTime(state.stopWall)}`));
+            summaryContainer.appendChild(createSummaryRow("Time length", formatElapsed(durationMs)));
+            summaryContainer.appendChild(createSummaryRow("Agreed upon teaching materials used", state.curriculaMaterialsUsed));
+            summaryContainer.appendChild(createSummaryRow("Lesson target referenced", state.lessonTargetPosted));
+          }
+          
+          let blockLines = [];
+          
+          if (renderMode === "Praise") {
+            const ratioText = formatPraiseRatio(positivePraise, negativePraise, durationMs);
+            summaryContainer.appendChild(createSummaryRow("Specific Praise", totalSpecific));
+            summaryContainer.appendChild(createSummaryRow("General Praise", totalGeneral));
+            summaryContainer.appendChild(createSummaryRow("Corrective Feedback", totalCorrective));
+            summaryContainer.appendChild(createSummaryRow("Redirective Statements", totalRedirect));
+            summaryContainer.appendChild(createSummaryRow("General Criticism", totalGenCrit));
+            summaryContainer.appendChild(createSummaryRow("Individual Criticism", totalIndCrit));
+            summaryContainer.appendChild(createSummaryRow("Total Statements", totalPraise));
+            summaryContainer.appendChild(createSummaryRow("Positive to Negative (ratio)", ratioText));
+          } else if (renderMode === "Engagement") {
+            const ratioText = formatOtrRatio(totalEngagement, durationMs);
+            summaryContainer.appendChild(createSummaryRow("Whole Group", totalEngWhole));
+            summaryContainer.appendChild(createSummaryRow("Small Group", totalEngSmall));
+            summaryContainer.appendChild(createSummaryRow("Precision Partners", totalEngPartners));
+            summaryContainer.appendChild(createSummaryRow("Choral Response", totalEngChoral));
+            summaryContainer.appendChild(createSummaryRow("Cloze Reading", totalEngCloze));
+            summaryContainer.appendChild(createSummaryRow("White Board Response", totalEngWhiteboard));
+            summaryContainer.appendChild(createSummaryRow("Total Engagement", totalEngagement));
+            summaryContainer.appendChild(createSummaryRow("Engagement per min (ratio)", ratioText));
+            
+            if (state.engagementChecks && state.engagementChecks.length > 0) {
+              for (const check of state.engagementChecks) {
+                const percentOffTask = check.totalStudents > 0 ? Math.round((check.offTaskStudents / check.totalStudents) * 100) : 0;
+                summaryContainer.appendChild(createSummaryRow(`Engagement Check (${check.timeMin} min)`, `${check.offTaskStudents} off task / ${check.totalStudents} total (${percentOffTask}%)`));
+              }
+            }
+          } else {
+            const ratioText = formatOtrRatio(totalOtr, durationMs);
+            summaryContainer.appendChild(createSummaryRow("Whole Group OTR", totalGroup));
+            summaryContainer.appendChild(createSummaryRow("Warm Call OTR", totalWarm));
+            summaryContainer.appendChild(createSummaryRow("Cold Call OTR", totalCold));
+            summaryContainer.appendChild(createSummaryRow("Volunteer OTR", totalVol));
+            summaryContainer.appendChild(createSummaryRow("OTR total", totalOtr));
+            summaryContainer.appendChild(createSummaryRow("OTR per min (ratio)", ratioText));
+          }
+
+          modeContainer.appendChild(summaryContainer);
+          
+          const chartWrap = document.createElement("div");
+          chartWrap.className = "chartWrap";
+          
+          const chartTitle = document.createElement("div");
+          chartTitle.className = "chartTitle";
+          chartTitle.textContent = `${renderMode} per minute over time`;
+          chartWrap.appendChild(chartTitle);
+          
+          const chartHost = document.createElement("div");
+          chartHost.className = "chartHost";
+          chartHost.setAttribute("role", "img");
+          chartHost.setAttribute("aria-label", `${renderMode} chart`);
+          
+          // Create lines and charts for this block
+          const oldStateMode = state.mode;
+          state.mode = renderMode;
+          
+          let chartSvg;
+          let modeEvents = [];
+          if (renderMode === "Praise") {
+             modeEvents = state.otrEvents.filter(e => ["specific","general","corrective","redirect","genCrit","indCrit"].includes(e.kind));
+             chartSvg = renderOtrMultiLineChartSVG(modeEvents, durationMs);
+          } else if (renderMode === "Engagement") {
+             modeEvents = state.otrEvents.filter(e => ["engWhole","engSmall","engPartners","engChoral","engCloze","engWhiteboard"].includes(e.kind));
+             chartSvg = renderEngagementStackedBarChartSVG(modeEvents, durationMs);
+          } else {
+             modeEvents = state.otrEvents.filter(e => ["group","warm","cold","volunteer"].includes(e.kind));
+             chartSvg = renderOtrMultiLineChartSVG(modeEvents, durationMs);
+          }
+          
+          chartHost.appendChild(chartSvg);
+          chartWrap.appendChild(chartHost);
+          modeContainer.appendChild(chartWrap);
+          
+          resultsGrid.appendChild(modeContainer);
+          
+          const curOtrTotal = renderMode === "Praise" ? totalPraise : renderMode === "Engagement" ? totalEngagement : totalOtr;
+          const curRatioText = renderMode === "Praise" ? formatPraiseRatio(positivePraise, negativePraise, durationMs) : formatOtrRatio(curOtrTotal, durationMs);
+          
+          const lines = buildResultsLines({
+              educator: state.educatorName,
+              recordedOn: state.startWall ? state.startWall.toLocaleDateString() : "",
+              recordedFrom: formatTime(state.startWall) + " to " + formatTime(state.stopWall),
+              durationMs,
+              lessonTargetPosted: state.lessonTargetPosted,
+              curriculaMaterialsUsed: state.curriculaMaterialsUsed,
+              group: totalGroup,
+              warm: totalWarm,
+              cold: totalCold,
+              volunteer: totalVol,
+              specific: totalSpecific,
+              general: totalGeneral,
+              corrective: totalCorrective,
+              redirect: totalRedirect,
+              genCrit: totalGenCrit,
+              indCrit: totalIndCrit,
+              engWhole: totalEngWhole,
+              engSmall: totalEngSmall,
+              engPartners: totalEngPartners,
+              engChoral: totalEngChoral,
+              engCloze: totalEngCloze,
+              engWhiteboard: totalEngWhiteboard,
+              otrTotal: curOtrTotal,
+              ratioText: curRatioText,
+              notes: renderMode === renderModes[0] ? state.notes : "",
+              engagementChecks: state.engagementChecks
+          });
+
+          state.mode = oldStateMode;
+
+          // Strip top common info if not first
+          if (renderMode !== renderModes[0]) {
+             lines.splice(1, 6); // remove educator, date, time, duration, materials, target
+          }
+          
+          sharedBlocks.push({ lines, chartSvg });
+        }
+
+        const notesText = document.getElementById("resultsNotesText");
+        notesText.value = state.notes;
+        
+        const adjustNotesHeight = () => {
+          notesText.style.height = "auto";
+          notesText.style.height = (notesText.scrollHeight) + "px";
+        };
+        
+        notesText.addEventListener("input", (e) => {
+          state.notes = e.target.value;
+          adjustNotesHeight();
+        });
+        
+        requestAnimationFrame(adjustNotesHeight);
+
+        document.getElementById("restartBtn").addEventListener("click", () => showSetup("setup"));
+        document.getElementById("resultsBackBtn").addEventListener("click", () => showQuestions());
+
+        const shareBtn = document.getElementById("shareBtn");
+        const shareStatus = document.getElementById("shareStatus");
+
+        shareBtn.addEventListener("click", () => {
+          shareStatus.textContent = "Generating image...";
+          shareBtn.disabled = true;
+          shareBtn.textContent = "Copied";
+          shareBtn.classList.add("copied");
+
+          // Update notes in the first block before rendering
+          const oldStateMode = state.mode;
+          state.mode = renderModes[0];
+          const firstOtrTotal = state.mode === "Praise" ? totalPraise : state.mode === "Engagement" ? totalEngagement : totalOtr;
+          const firstRatioText = state.mode === "Praise" ? formatPraiseRatio(positivePraise, negativePraise, durationMs) : formatOtrRatio(firstOtrTotal, durationMs);
+          
+          sharedBlocks[0].lines = buildResultsLines({
+              educator: state.educatorName,
+              recordedOn: state.startWall ? state.startWall.toLocaleDateString() : "",
+              recordedFrom: formatTime(state.startWall) + " to " + formatTime(state.stopWall),
+              durationMs,
+              lessonTargetPosted: state.lessonTargetPosted,
+              curriculaMaterialsUsed: state.curriculaMaterialsUsed,
+              group: totalGroup, warm: totalWarm, cold: totalCold, volunteer: totalVol,
+              specific: totalSpecific, general: totalGeneral, corrective: totalCorrective,
+              redirect: totalRedirect, genCrit: totalGenCrit, indCrit: totalIndCrit,
+              engWhole: totalEngWhole, engSmall: totalEngSmall, engPartners: totalEngPartners,
+              engChoral: totalEngChoral, engCloze: totalEngCloze, engWhiteboard: totalEngWhiteboard,
+              otrTotal: firstOtrTotal,
+              ratioText: firstRatioText,
+              notes: state.notes,
+              engagementChecks: state.engagementChecks
+          });
+          state.mode = oldStateMode;
+
+          // -- ADDED FOR REACT INTEGRATION --
+          try {
+            window.parent.postMessage({
+              type: "SAVE_OBSERVATION",
+              payload: {
+                educatorName: state.educatorName,
+                mode: oldStateMode,
+                lessonTargetPosted: state.lessonTargetPosted,
+                curriculaMaterialsUsed: state.curriculaMaterialsUsed,
+                durationMs: durationMs,
+                startedAt: state.startWall ? state.startWall.toISOString() : new Date().toISOString(),
+                stoppedAt: state.stopWall ? state.stopWall.toISOString() : new Date().toISOString(),
+                events: state.otrEvents,
+                notes: state.notes
+              }
+            }, "*");
+          } catch (e) {
+            console.error("Failed to post message to parent", e);
+          }
+          // ---------------------------------
+
+          const blobPromise = (async () => {
+            const composite = renderResultsCompositeSVG(sharedBlocks);
+            return await svgElementToPngBlob(composite, 2);
+          })();
+
+          const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+          const handleSuccess = () => {
+            shareStatus.textContent = "Data and graph copied! Navigating back...";
+            shareBtn.disabled = false;
+            // -- ADDED FOR REACT INTEGRATION --
+            // Tell parent to redirect back to dashboard after 3 seconds
+            setTimeout(() => {
+              window.parent.postMessage({ type: "OBSERVATION_SAVED" }, "*");
+            }, 3000);
+            // ---------------------------------
+          };
+
+          const resetShareBtn = () => {
+            shareBtn.disabled = false;
+            setTimeout(() => {
+              shareBtn.textContent = "Share";
+              shareBtn.classList.remove("copied");
+            }, 3000);
+            // Even if share fails, tell parent we finished
+            setTimeout(() => {
+              window.parent.postMessage({ type: "OBSERVATION_SAVED" }, "*");
+            }, 3000);
+          };
+
+          if (isMobile && navigator.canShare) {
+             blobPromise.then(async (blob) => {
+                 try {
+                     const file = new File([blob], safeFilename(), { type: "image/png" });
+                     if (navigator.canShare({ files: [file] })) {
+                         await navigator.share({ files: [file] });
+                         shareStatus.textContent = "Shared successfully!";
+                     } else {
+                         throw new Error("canShare returned false");
+                     }
+                 } catch (err) {
+                     if (err.name === "AbortError") {
+                         shareStatus.textContent = "Share cancelled.";
+                     } else {
+                         downloadBlob(blob, safeFilename());
+                         shareStatus.textContent = "Image downloaded!";
+                     }
+                 }
+                 resetShareBtn();
+             });
+          } else {
+             try {
+                 const item = new ClipboardItem({ "image/png": blobPromise });
+                 navigator.clipboard.write([item]).then(handleSuccess).catch(async () => {
+                     const blob = await blobPromise;
+                     downloadBlob(blob, safeFilename());
+                     shareStatus.textContent = "Image downloaded! (Clipboard access blocked)";
+                     resetShareBtn();
+                 });
+             } catch (err) {
+                 blobPromise.then(async (blob) => {
+                     try {
+                         const item = new ClipboardItem({ "image/png": blob });
+                         await navigator.clipboard.write([item]);
+                         handleSuccess();
+                     } catch (clipboardErr) {
+                         try {
+                             const file = new File([blob], safeFilename(), { type: "image/png" });
+                             if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                 await navigator.share({ files: [file] });
+                                 shareStatus.textContent = "Shared successfully!";
+                             } else {
+                                 throw clipboardErr;
+                             }
+                         } catch (fallbackErr) {
+                             downloadBlob(blob, safeFilename());
+                             shareStatus.textContent = "Image downloaded!";
+                         }
+                     }
+                     resetShareBtn();
+                 }).catch(blobErr => {
+                     shareStatus.textContent = "Error generating image: " + blobErr.message;
+                     resetShareBtn();
+                 });
+             }
+          }
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && state.currentScreen === "run") {
+          const startBtn = document.getElementById("startBtn");
+          if (startBtn && !startBtn.disabled) {
+            if (document.activeElement && (document.activeElement.tagName.toLowerCase() === "textarea" || document.activeElement.tagName.toLowerCase() === "input")) {
+              return;
+            }
+            e.preventDefault();
+            startBtn.click();
+          }
+        }
+      });
+
+      // Initialize App
+      showSetup();
+    });
+  </script>
+</body>
+</html>
