@@ -3,7 +3,7 @@ import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'fireba
 import { db, auth } from '../firebase';
 import { User, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, LogOut, List, BarChart2, Download, Edit2, Save, Trash2, ShieldCheck, Table, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, LogOut, List, BarChart2, Download, Edit2, Save, Trash2, Table, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import Chart from './Chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -320,15 +320,6 @@ export default function Dashboard({ user }: { user: User }) {
             <p className="text-gray-500">Welcome, {user.displayName}</p>
           </div>
           <div className="flex gap-4">
-            {user.email === 'jacobn@cbk12.com' && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="flex items-center gap-2 bg-[#1f9d55] border border-[#1f9d55] text-white px-4 py-3 rounded-full font-bold hover:bg-[#15803d] transition shadow-sm"
-              >
-                <ShieldCheck className="w-5 h-5" />
-                Admin Panel
-              </button>
-            )}
             <button
               onClick={() => signOut(auth)}
               className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-full font-bold hover:bg-gray-50 transition shadow-sm"

@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { onAuthStateChanged, User, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
-import Login from './components/Login';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from './firebase';
 import Dashboard from './components/Dashboard';
 import ObservationFlow from './components/ObservationFlow';
-import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,35 +13,11 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       setAuthError(null);
-      
-      if (authUser && authUser.email) {
-        // Automatically allow the root admin
-        if (authUser.email.toLowerCase() === 'jacobn@cbk12.com') {
-          setUser(authUser);
-          setLoading(false);
-          return;
-        }
-
-        try {
-          // Check if user is in the staff list
-          const staffDoc = await getDoc(doc(db, 'staff', authUser.email.toLowerCase()));
-          if (staffDoc.exists()) {
-            setUser(authUser);
-          } else {
-            await signOut(auth);
-            setUser(null);
-            setAuthError("Your email is not listed in the staff directory. Please contact your administrator to get access.");
-          }
-        } catch (error) {
-          console.error("Error verifying access:", error);
-          await signOut(auth);
-          setUser(null);
-          setAuthError("Failed to verify access. Please try again.");
-        }
+      if (authUser) {
+        setUser(authUser);
       } else {
         setUser(null);
       }
-      
       setLoading(false);
     });
     
@@ -55,8 +28,25 @@ export default function App() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Only the root admin (jacobn@cbk12.com) can access the admin panel for now
-  const isAdmin = user?.email === 'jacobn@cbk12.com';
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f7f7f5] p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] max-w-md w-full text-center border border-black/10">
+          <h1 className="text-3xl font-bold mb-2">Walk Through Tool</h1>
+          <p className="text-gray-500 mb-8">Sign in to record and view observations.</p>
+          <button
+            onClick={async () => {
+              const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+              await signInWithPopup(auth, new GoogleAuthProvider());
+            }}
+            className="flex items-center justify-center gap-2 w-full bg-black text-white py-4 px-6 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors"
+          >
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
@@ -66,10 +56,9 @@ export default function App() {
         </div>
       )}
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/" element={user ? <Dashboard user={user} /> : <Navigate to="/login" />} />
-        <Route path="/record" element={user ? <ObservationFlow user={user} /> : <Navigate to="/login" />} />
-        <Route path="/admin" element={user && isAdmin ? <AdminPanel user={user} /> : <Navigate to="/" />} />
+        <Route path="/" element={<Dashboard user={user} />} />
+        <Route path="/record" element={<ObservationFlow user={user} />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
