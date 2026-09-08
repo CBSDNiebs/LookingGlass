@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from './firebase';
 import Dashboard from './components/Dashboard';
 import ObservationFlow from './components/ObservationFlow';
@@ -36,7 +36,6 @@ export default function App() {
           <p className="text-gray-500 mb-8">Sign in to record and view observations.</p>
           <button
             onClick={async () => {
-              const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
               await signInWithPopup(auth, new GoogleAuthProvider());
             }}
             className="flex items-center justify-center gap-2 w-full bg-black text-white py-4 px-6 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors"

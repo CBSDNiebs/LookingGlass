@@ -98,4 +98,4 @@ export default function ObservationFlow({ user }: { user: User }) {
   );
 }
 
-export const STAFF_DIRECTORY: {name: string, school: string}[] = [];
+export const STAFF_DIRECTORY: {name: string, school: string, email?: string, role?: string}[] = [];

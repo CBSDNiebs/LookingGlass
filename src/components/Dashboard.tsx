@@ -266,7 +266,7 @@ export default function Dashboard({ user }: { user: User }) {
     allowedStaffForSuggestions = compositeStaffDirectory.filter(s => s.school === school).map(s => s.name);
   } else {
     // Only show themselves
-    const selfStaff = compositeStaffDirectory.find(s => s.email?.toLowerCase() === user.email?.toLowerCase());
+    const selfStaff = user.email ? compositeStaffDirectory.find(s => s.email?.toLowerCase() === user.email?.toLowerCase()) : null;
     if (selfStaff) allowedStaffForSuggestions.push(selfStaff.name);
   }
 
