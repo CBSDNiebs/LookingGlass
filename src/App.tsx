@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from './firebase';
 import Dashboard from './components/Dashboard';
@@ -48,7 +48,7 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       {authError && (
         <div className="fixed top-0 left-0 w-full bg-red-500 text-white p-4 text-center z-50">
           <p className="font-semibold">{authError}</p>
@@ -59,6 +59,6 @@ export default function App() {
         <Route path="/record" element={<ObservationFlow user={user} />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
