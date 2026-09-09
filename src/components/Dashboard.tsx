@@ -211,8 +211,15 @@ export default function Dashboard({ user }: { user: User }) {
   const exportChart = async (elementId: string, filename: string) => {
     const element = document.getElementById(elementId);
     if (!element) return;
+    
+    // Temporarily lock dimensions so ResponsiveContainer doesn't collapse inside the html2canvas clone
+    const originalWidth = element.style.width;
+    const originalHeight = element.style.height;
+    element.style.width = `${element.offsetWidth}px`;
+    element.style.height = `${element.offsetHeight}px`;
+    
     try {
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff' });
+      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `${filename}.png`;
@@ -220,6 +227,9 @@ export default function Dashboard({ user }: { user: User }) {
       link.click();
     } catch (err) {
       console.error('Failed to export chart', err);
+    } finally {
+      element.style.width = originalWidth;
+      element.style.height = originalHeight;
     }
   };
 
@@ -421,7 +431,7 @@ export default function Dashboard({ user }: { user: User }) {
                         label={{ value: 'Total Count', angle: -90, position: 'insideLeft', style: { fontSize: 12, fontWeight: 'bold' } }}
                       />
                       <RechartsTooltip cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                         {otrData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
@@ -459,7 +469,7 @@ export default function Dashboard({ user }: { user: User }) {
                         label={{ value: 'Total Count', angle: -90, position: 'insideLeft', style: { fontSize: 12, fontWeight: 'bold' } }}
                       />
                       <RechartsTooltip cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                         {praiseData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
@@ -497,7 +507,7 @@ export default function Dashboard({ user }: { user: User }) {
                         label={{ value: 'Total Count', angle: -90, position: 'insideLeft', style: { fontSize: 12, fontWeight: 'bold' } }}
                       />
                       <RechartsTooltip cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                         {engData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
