@@ -7,7 +7,7 @@ import { Plus, Search, LogOut, List, BarChart2, Download, Edit2, Save, Trash2, T
 import { format } from 'date-fns';
 import Chart from './Chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import clsx from 'clsx';
 import { STAFF_DIRECTORY, cleanStaffName } from './ObservationFlow';
 
@@ -212,15 +212,14 @@ export default function Dashboard({ user }: { user: User }) {
     const element = document.getElementById(elementId);
     if (!element) return;
     
-    // Temporarily lock dimensions so ResponsiveContainer doesn't collapse inside the html2canvas clone
+    // Temporarily lock dimensions so ResponsiveContainer doesn't collapse inside the clone
     const originalWidth = element.style.width;
     const originalHeight = element.style.height;
     element.style.width = `${element.offsetWidth}px`;
     element.style.height = `${element.offsetHeight}px`;
     
     try {
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = await toPng(element, { backgroundColor: '#ffffff', pixelRatio: 2 });
       const link = document.createElement('a');
       link.download = `${filename}.png`;
       link.href = dataUrl;
