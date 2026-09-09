@@ -224,7 +224,9 @@ export default function Dashboard({ user }: { user: User }) {
       const link = document.createElement('a');
       link.download = `${filename}.png`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error('Failed to export chart', err);
     } finally {
