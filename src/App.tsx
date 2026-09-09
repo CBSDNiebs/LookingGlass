@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from './firebase';
 import Dashboard from './components/Dashboard';
@@ -47,18 +47,20 @@ export default function App() {
     );
   }
 
+  const router = createHashRouter([
+    { path: "/", element: <Dashboard user={user} /> },
+    { path: "/record", element: <ObservationFlow user={user} /> },
+    { path: "*", element: <Navigate to="/" /> }
+  ]);
+
   return (
-    <HashRouter>
+    <>
       {authError && (
         <div className="fixed top-0 left-0 w-full bg-red-500 text-white p-4 text-center z-50">
           <p className="font-semibold">{authError}</p>
         </div>
       )}
-      <Routes>
-        <Route path="/" element={<Dashboard user={user} />} />
-        <Route path="/record" element={<ObservationFlow user={user} />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </HashRouter>
+      <RouterProvider router={router} />
+    </>
   );
 }
